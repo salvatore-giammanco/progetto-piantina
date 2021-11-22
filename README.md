@@ -47,4 +47,6 @@
     - Copertura e organizzaizone dei cavi
 7. Miglioramenti:
     - Sensore del livello dell'acqua
+    - PCB
+    - Sistema di prima configurazione con wi-fi e app da smartphone (per la versione casalinga)
     - Umanoide che riempie l'acqua da solo
