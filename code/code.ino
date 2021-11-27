@@ -3,7 +3,7 @@
 
 const float AirValue = 470.0; //Value the moisture sensor gives when dry
 const float WaterValue = 222.0; //Value the moisture sensor gives when submerged in water
-const short MS_minute = 60000; //Milliseconds per minute
+const int MS_minute = 60000; //Milliseconds per minute
 const long MS_hour = (long)MS_minute*60; //Milliseconds per hour
 const long SamplingTimeMS = MS_hour; //Time between two consecutive samplings of the soil mosture
 const long PumpRunningTimeMS = MS_minute; //Time the pump runs when activated
