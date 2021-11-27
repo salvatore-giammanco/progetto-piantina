@@ -9,6 +9,7 @@ const long SamplingTimeMS = MS_hour; //Time between two consecutive samplings of
 const long PumpRunningTimeMS = MS_minute; //Time the pump runs when activated
 const short NumberReadings = 10; //Number of moisture readings for each sampling
 const long ReadingsIntervalMS = MS_minute/2; //Time between two consecutive moisture readings for a sampling
+const short MoisturePercTreshold = 50;
 
 //Function to map a value on a range
 float map_range(float x, float in_min, float in_max, float out_min, float out_max) {
@@ -54,7 +55,7 @@ void loop() {
   float soilmoisturepercent = read_soil_moisture_percent();
   print_on_serial(soilmoisturepercent, '%');
 
-  if(soilmoisturepercent < 50){
+  if(soilmoisturepercent < MoisturePercTreshold){
     digitalWrite(RELAY_PIN, HIGH);
     delay(PumpRunningTimeMS);
   }
