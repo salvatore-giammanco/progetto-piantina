@@ -172,15 +172,15 @@ void setupRouting() {
   server.on("/watervalue/set", HTTP_POST, [](){changeValueFloat("WaterValue");});
   server.on("/watervalue/reset", HTTP_POST, [](){changeValueFloat("WaterValue", DefaultWaterValue);});
   //SamplingTime
-  server.on("/samplingtime", [](){getValueLong("SamplingTime", " ms");});
+  server.on("/samplingtime", [](){getValueLong("SamplingTime", "ms");});
   server.on("/samplingtime/set", HTTP_POST, [](){changeValueLong("SamplingTime");});
   server.on("/samplingtime/reset", HTTP_POST, [](){changeValueLong("SamplingTime", DefaultSamplingTime);});
   //PumpRuntime
-  server.on("/pumpruntime", [](){getValueLong("PumpRuntime", " ms");});
+  server.on("/pumpruntime", [](){getValueLong("PumpRuntime", "ms");});
   server.on("/pumpruntime/set", HTTP_POST, [](){changeValueLong("PumpRuntime");});
   server.on("/pumpruntime/reset", HTTP_POST, [](){changeValueLong("PumpRuntime", DefaultPumpRuntime);});
   //ReadingsInt
-  server.on("/readingsint", [](){getValueLong("ReadingsInt", " ms");});
+  server.on("/readingsint", [](){getValueLong("ReadingsInt", "ms");});
   server.on("/readingsint/set", HTTP_POST, [](){changeValueLong("ReadingsInt");});
   server.on("/readingsint/reset", HTTP_POST, [](){changeValueLong("ReadingsInt", DefaultReadingsInt);});
   //NumReading
