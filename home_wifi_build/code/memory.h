@@ -14,12 +14,12 @@ static const long DefaultMS_hour = (long)DefaultMS_minute*60; //Milliseconds per
 static const long DefaultSamplingTime = DefaultMS_hour; //Time between two consecutive samplings of the soil mosture
 static const long DefaultPumpRuntime = 5*DefaultMS_minute; //Time the pump runs when activated
 static const long DefaultReadingsInt = DefaultMS_minute/2; //Time between two consecutive moisture readings for a sampling
-static const short DefaultNumReading = 10; //Number of moisture readings for each sampling
+static const short DefaultNumReadings = 10; //Number of moisture readings for each sampling
 static const int MOISTURE_READING_PIN = 34;
 static const int RELAY_PIN = 23;
 
 
-void read_var(float value, char* keyname){
+void readSetVar(float value, char* keyname){
   if(preferences.isKey(keyname)){
     Serial.print(keyname);
     Serial.println(" key found");
@@ -33,7 +33,7 @@ void read_var(float value, char* keyname){
 }
 
 
-void read_var(long value, char* keyname){
+void readSetVar(long value, char* keyname){
   if(preferences.isKey(keyname)){
     Serial.print(keyname);
     Serial.println(" key found");
@@ -47,7 +47,7 @@ void read_var(long value, char* keyname){
 }
 
 
-void read_var(short value, char* keyname){
+void readSetVar(short value, char* keyname){
   if(preferences.isKey(keyname)){
     Serial.print(keyname);
     Serial.println(" key found");

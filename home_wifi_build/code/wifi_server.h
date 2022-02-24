@@ -2,6 +2,7 @@
 #define _WIFI_SERVER_H_
 
 #include "memory.h"
+#include "utils.h"
 #include <WiFi.h>
 #include <WebServer.h>
 #include <ArduinoJson.h>
@@ -15,7 +16,7 @@ StaticJsonDocument<250> jsonDocument;
 char buffer[250];
 
 
-void create_json(char *tag, float value, char *unit) {
+void createJson(char *tag, float value, char *unit) {
   jsonDocument.clear();
   jsonDocument["type"] = tag;
   jsonDocument["value"] = value;
@@ -24,10 +25,18 @@ void create_json(char *tag, float value, char *unit) {
 }
 
 
+void read_moisture_api(){
+  Serial.println("Get Moisture");
+  float moisture = read_soil_moisture_percent();
+  createJson("Moisture", moisture, "%");
+  server.send(200, "application/json", buffer);
+}
+
+
 void getValueFloat(char* keyname, char* unit = "") {
   Serial.print("Get ");
   Serial.println(keyname);
-  create_json(keyname, preferences.getFloat(keyname), unit);
+  createJson(keyname, preferences.getFloat(keyname), unit);
   server.send(200, "application/json", buffer);
 }
 
@@ -35,7 +44,7 @@ void getValueFloat(char* keyname, char* unit = "") {
 void getValueShort(char* keyname, char* unit = "") {
   Serial.print("Get ");
   Serial.println(keyname);
-  create_json(keyname, preferences.getShort(keyname), unit);
+  createJson(keyname, preferences.getShort(keyname), unit);
   server.send(200, "application/json", buffer);
 }
 
@@ -43,7 +52,7 @@ void getValueShort(char* keyname, char* unit = "") {
 void getValueLong(char* keyname, char* unit = "") {
   Serial.print("Get ");
   Serial.println(keyname);
-  create_json(keyname, preferences.getLong(keyname), unit);
+  createJson(keyname, preferences.getLong(keyname), unit);
   server.send(200, "application/json", buffer);
 }
 
@@ -123,7 +132,7 @@ void changeValueLong(char* keyname, long value = -1) {
   else{
     set_value = (long)jsonDocument["value"];
   }
-  
+
   Serial.print("Setting value to");
   Serial.println(set_value);
   preferences.putLong(keyname, set_value);
@@ -135,12 +144,12 @@ void changeValueLong(char* keyname, long value = -1) {
 }
 
 
-void setup_routing() {
+void setupRouting() {
   //Sets a server routing so that each endpoint is assigned to an handler
   //MoistureTresh
-  server.on("/moisture", [](){getValueFloat("MoistureTresh", "%");});
-  server.on("/moisture/set", HTTP_POST, [](){changeValueFloat("MoistureTresh");});
-  server.on("/moisture/reset", HTTP_POST, [](){changeValueFloat("MoistureTresh", DefaultMoistureTresh);});
+  server.on("/moisturetresh", [](){getValueFloat("MoistureTresh", "%");});
+  server.on("/moisturetresh/set", HTTP_POST, [](){changeValueFloat("MoistureTresh");});
+  server.on("/moisturetresh/reset", HTTP_POST, [](){changeValueFloat("MoistureTresh", DefaultMoistureTresh);});
   //AirValue
   server.on("/airvalue", [](){getValueFloat("AirValue");});
   server.on("/airvalue/set", HTTP_POST, [](){changeValueFloat("AirValue");});
@@ -162,9 +171,11 @@ void setup_routing() {
   server.on("/readingsint/set", HTTP_POST, [](){changeValueLong("ReadingsInt");});
   server.on("/readingsint/reset", HTTP_POST, [](){changeValueLong("ReadingsInt", DefaultReadingsInt);});
   //NumReading
-  server.on("/numreading", [](){getValueShort("NumReading");});
-  server.on("/numreading/set", HTTP_POST, [](){changeValueShort("NumReading");});
-  server.on("/numreading/reset", HTTP_POST, [](){changeValueShort("NumReading", DefaultNumReading);});
+  server.on("/numreadings", [](){getValueShort("NumReadings");});
+  server.on("/numreadings/set", HTTP_POST, [](){changeValueShort("NumReadings");});
+  server.on("/numreadings/reset", HTTP_POST, [](){changeValueShort("NumReadings", DefaultNumReadings);});
+  // Get current moisture
+  server.on("/moisture", read_moisture_api);
   // start server
   server.begin();
 }
