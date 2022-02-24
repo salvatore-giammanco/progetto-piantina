@@ -25,14 +25,15 @@ void create_json(char *tag, float value, char *unit) {
 }
 
 
-void getMoistureTresh() {
-  Serial.println("Get moisture");
-  create_json("moisture", preferences.getFloat("MoistureTresh"), "%");
+void getValue(char* keyname) {
+  Serial.print("Get ");
+  Serial.println(keyname);
+  create_json(keyname, preferences.getFloat(keyname), "%");
   server.send(200, "application/json", buffer);
 }
 
 
-void changeMoistureTresh() {
+void changeValue(char* keyname) {
   if (server.hasArg("plain") == false) {
     Serial.println("Wrong json body!");
   }
@@ -63,8 +64,8 @@ void resetMoistureTresh() {
 void setup_routing() {
   //Sets a server routing so that each endpoint is assigned to an handler
   //MoistureTresh
-  server.on("/treshold", getMoistureTresh);
-  server.on("/treshold/set", HTTP_POST, changeMoistureTresh);
+  server.on("/treshold", [&](){getValue("MoistureTresh");});
+  server.on("/treshold/set", HTTP_POST, [](){changeValue("MoistureTresh");});
   server.on("/treshold/reset", HTTP_POST, resetMoistureTresh);
   // start server
   server.begin();

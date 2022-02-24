@@ -1,6 +1,4 @@
-#include "memory.h"
-#include "server.h"
-#include "constants.h"
+#include "wifi_server.h"
 
 
 //Function to map a value on a range
@@ -48,7 +46,6 @@ void setup() {
   * If the script has been run before, there's already a value of moisture
   * Otherwise set the fixed one
   */
-  Serial.println("Reading AirValue");
   read_var(DefaultAirValue, "AirValue");
   connectToWiFi();
   setup_routing();
@@ -56,14 +53,16 @@ void setup() {
 
 
 void loop() {
-  digitalWrite(RELAY_PIN, LOW);
-  delay(DefaultSamplingTime);
+  server.handleClient();
+  // digitalWrite(RELAY_PIN, LOW);
+  // delay(DefaultSamplingTime);
 
-  float soilmoisturepercent = read_soil_moisture_percent();
-  print_on_serial(soilmoisturepercent, '%');
+  // float soilmoisturepercent = read_soil_moisture_percent();
+  // print_on_serial(soilmoisturepercent, '%');
 
-  if(soilmoisturepercent < DefaultMoistureTresh){
-    digitalWrite(RELAY_PIN, HIGH);
-    delay(DefaultPumpRuntime);
-  }
+  // if(soilmoisturepercent < DefaultMoistureTresh){
+  //   digitalWrite(RELAY_PIN, HIGH);
+  //   delay(DefaultPumpRuntime);
+  // }
+  delay(500);
 }
