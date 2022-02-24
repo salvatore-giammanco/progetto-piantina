@@ -46,7 +46,13 @@ void setup() {
   * If the script has been run before, there's already a value of moisture
   * Otherwise set the fixed one
   */
+  read_var(DefaultMoistureTresh, "MoistureTresh");
   read_var(DefaultAirValue, "AirValue");
+  read_var(DefaultWaterValue, "WaterValue");
+  read_var(DefaultSamplingTime, "SamplingTime");
+  read_var(DefaultPumpRuntime, "PumpRuntime");
+  read_var(DefaultReadingsInt, "ReadingsInt");
+  read_var(DefaultNumReading, "NumReading");
   connectToWiFi();
   setup_routing();
 }
