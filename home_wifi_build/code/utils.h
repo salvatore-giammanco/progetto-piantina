@@ -10,13 +10,11 @@ float map_range(float x, float in_min, float in_max, float out_min, float out_ma
 
 
 //Function to print a value p on serial, along with a final value f which also generates a new line
-template<typename T, typename F>
-void print_on_serial(T p, F fin){
-  Serial.println();
+template<typename T>
+void print_on_serial(T p){
   Serial.print(millis());
   Serial.print(": ");
-  Serial.print(p);
-  Serial.println(fin);
+  Serial.println(p);
 }
 
 
@@ -29,7 +27,6 @@ float read_soil_moisture_percent(){
   float WaterValue = preferences.getFloat("WaterValue");
   float SoilMoisture = (float) analogRead(MOISTURE_READING_PIN);
   float SoilMoisturePercent = map_range(SoilMoisture, AirValue, WaterValue, 0.0, 100.0);
-  print_on_serial('\r', SoilMoisturePercent); //Prints the absolute value
   return constrain(SoilMoisturePercent, 0.0, 100.0); //Returns the percentage of moisture
 }
 
@@ -42,7 +39,7 @@ float read_soil_moisture_percent_average(){
     SoilMoisturePercentAverage += read_soil_moisture_percent()/NumReadings; //Average of all the readings
     delay(ReadingsInt); //Pause between two readings
   }
-  print_on_serial('\n', SoilMoisturePercentAverage); //Prints the average value
+  print_on_serial(SoilMoisturePercentAverage); //Prints the average value
   return SoilMoisturePercentAverage;
 }
 

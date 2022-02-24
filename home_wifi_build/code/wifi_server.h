@@ -28,6 +28,7 @@ void createJson(char *tag, float value, char *unit) {
 void read_moisture_api(){
   Serial.println("Get Moisture");
   float moisture = read_soil_moisture_percent();
+  print_on_serial(moisture);
   createJson("Moisture", moisture, "%");
   server.send(200, "application/json", buffer);
 }
@@ -144,6 +145,18 @@ void changeValueLong(char* keyname, long value = -1) {
 }
 
 
+void resetAll(){
+  changeValueFloat("MoistureTresh", DefaultMoistureTresh);
+  changeValueFloat("AirValue", DefaultAirValue);
+  changeValueFloat("WaterValue", DefaultWaterValue);
+  changeValueLong("SamplingTime", DefaultSamplingTime);
+  changeValueLong("PumpRuntime", DefaultPumpRuntime);
+  changeValueLong("PumpRuntime", DefaultPumpRuntime);
+  changeValueLong("ReadingsInt", DefaultReadingsInt);
+  changeValueShort("NumReadings", DefaultNumReadings);
+}
+
+
 void setupRouting() {
   //Sets a server routing so that each endpoint is assigned to an handler
   //MoistureTresh
@@ -159,15 +172,15 @@ void setupRouting() {
   server.on("/watervalue/set", HTTP_POST, [](){changeValueFloat("WaterValue");});
   server.on("/watervalue/reset", HTTP_POST, [](){changeValueFloat("WaterValue", DefaultWaterValue);});
   //SamplingTime
-  server.on("/samplingtime", [](){getValueLong("SamplingTime");});
+  server.on("/samplingtime", [](){getValueLong("SamplingTime", " ms");});
   server.on("/samplingtime/set", HTTP_POST, [](){changeValueLong("SamplingTime");});
   server.on("/samplingtime/reset", HTTP_POST, [](){changeValueLong("SamplingTime", DefaultSamplingTime);});
   //PumpRuntime
-  server.on("/pumpruntime", [](){getValueLong("PumpRuntime");});
+  server.on("/pumpruntime", [](){getValueLong("PumpRuntime", " ms");});
   server.on("/pumpruntime/set", HTTP_POST, [](){changeValueLong("PumpRuntime");});
   server.on("/pumpruntime/reset", HTTP_POST, [](){changeValueLong("PumpRuntime", DefaultPumpRuntime);});
   //ReadingsInt
-  server.on("/readingsint", [](){getValueLong("ReadingsInt");});
+  server.on("/readingsint", [](){getValueLong("ReadingsInt", " ms");});
   server.on("/readingsint/set", HTTP_POST, [](){changeValueLong("ReadingsInt");});
   server.on("/readingsint/reset", HTTP_POST, [](){changeValueLong("ReadingsInt", DefaultReadingsInt);});
   //NumReading
@@ -176,6 +189,8 @@ void setupRouting() {
   server.on("/numreadings/reset", HTTP_POST, [](){changeValueShort("NumReadings", DefaultNumReadings);});
   // Get current moisture
   server.on("/moisture", read_moisture_api);
+  // Reset all variables
+  server.on("/all/reset", resetAll);
   // start server
   server.begin();
 }

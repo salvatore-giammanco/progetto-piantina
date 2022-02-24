@@ -27,15 +27,11 @@ void setup() {
 
 void loop() {
   server.handleClient();
-  // digitalWrite(RELAY_PIN, LOW);
-  // delay(preferences.getLong("SamplingTime"));
-
-  // float Soilmoisturepercent = read_soil_moisture_percent_average();
-  // print_on_serial(Soilmoisturepercent, '%');
-
-  // if(Soilmoisturepercent < preferences.getFloat("MoistureTresh")){
-  //   digitalWrite(RELAY_PIN, HIGH);
-  //   delay(preferences.getLong("PumpRuntime"));
-  // }
-  delay(500);
+  digitalWrite(RELAY_PIN, LOW);
+  delay(preferences.getLong("SamplingTime"));
+  float Soilmoisturepercent = read_soil_moisture_percent_average();
+  if(Soilmoisturepercent < preferences.getFloat("MoistureTresh")){
+    digitalWrite(RELAY_PIN, HIGH);
+    delay(preferences.getLong("PumpRuntime"));
+  }
 }
