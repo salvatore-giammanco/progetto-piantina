@@ -34,6 +34,15 @@ void read_moisture_api(){
 }
 
 
+void read_moisture_api_raw(){
+  Serial.println("Get Moisture Absolute");
+  float moisture = read_soil_moisture();
+  print_on_serial(moisture);
+  createJson("Moisture", moisture, "");
+  server.send(200, "application/json", buffer);
+}
+
+
 void getValueFloat(char* keyname, char* unit = "") {
   Serial.print("Get ");
   Serial.println(keyname);
@@ -189,6 +198,7 @@ void setupRouting() {
   server.on("/numreadings/reset", HTTP_POST, [](){changeValueShort("NumReadings", DefaultNumReadings);});
   // Get current moisture
   server.on("/moisture", read_moisture_api);
+  server.on("/moisture/raw", read_moisture_api_raw);
   // Reset all variables
   server.on("/all/reset", resetAll);
   // start server

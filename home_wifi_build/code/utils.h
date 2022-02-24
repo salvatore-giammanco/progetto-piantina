@@ -22,10 +22,15 @@ void print_on_serial(T p){
 //It performs NumberReadings number of readings of the soil moisture, at times ReadingsInt
 //The final moisture sample value is the average of all the readings
 //The sampled values are converted into percentages based on AirValue and WaterValue
+float read_soil_moisture(){
+  return (float)analogRead(MOISTURE_READING_PIN);
+}
+
+
 float read_soil_moisture_percent(){
   float AirValue = preferences.getFloat("AirValue");
   float WaterValue = preferences.getFloat("WaterValue");
-  float SoilMoisture = (float) analogRead(MOISTURE_READING_PIN);
+  float SoilMoisture = read_soil_moisture();
   float SoilMoisturePercent = map_range(SoilMoisture, AirValue, WaterValue, 0.0, 100.0);
   return constrain(SoilMoisturePercent, 0.0, 100.0); //Returns the percentage of moisture
 }
