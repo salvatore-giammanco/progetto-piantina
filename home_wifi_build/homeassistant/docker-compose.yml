@@ -1,0 +1,21 @@
+version: '3'
+services:
+  homeassistant:
+    container_name: homeassistant
+    image: "ghcr.io/home-assistant/home-assistant:stable"
+    volumes:
+    - /home/luigi/Programmazione/Arduino/homeassistant:/config
+    - /etc/localtime:/etc/localtime:ro
+    restart: unless-stopped
+    privileged: true
+    network_mode: host
+  mosquitto:
+    container_name: mosquitto
+    image: eclipse-mosquitto
+    volumes:
+    - "/home/luigi/Programmazione/Arduino/homeassistant/mosquitto/config:/mosquitto/config"
+    - "/home/luigi/Programmazione/Arduino/homeassistant/mosquitto/log:/mosquitto/log"
+    - "/home/luigi/Programmazione/Arduino/homeassistant/mosquitto/data:/mosquitto/data"
+    restart: always
+    ports:
+    - "1884:1884"

@@ -9,12 +9,12 @@ const char PASS[]               = "6j6dP38v22";    // Network password (use for 
 const char DEVICE_KEY[]  = "S7FXNBGKAOSCIVDOJASW";    // Secret device password
 
 void onLedSwitchChange();
+void updateOnSync();
 
 int random_value;
 bool led_switch;
 
 void initProperties(){
-
   ArduinoCloud.setBoardId(DEVICE_LOGIN_NAME);
   ArduinoCloud.setSecretDeviceKey(DEVICE_KEY);
   ArduinoCloud.addProperty(random_value, READ, ON_CHANGE, NULL, 1);

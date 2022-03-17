@@ -3,6 +3,9 @@
 
 #include "memory.h"
 
+short NumReadings = 10; // Read moisture 10 times
+int ReadingsInt = 30000; // Read every 30 seconds
+
 //Function to map a value on a range
 float map_range(float x, float in_min, float in_max, float out_min, float out_max) {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
@@ -34,6 +37,7 @@ float read_soil_moisture_percent(){
   float SoilMoisturePercent = map_range(SoilMoisture, AirValue, WaterValue, 0.0, 100.0);
   return constrain(SoilMoisturePercent, 0.0, 100.0); //Returns the percentage of moisture
 }
+
 
 float read_soil_moisture_percent_average(){
   float SoilMoisturePercentAverage = 0;
