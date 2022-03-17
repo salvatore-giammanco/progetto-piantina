@@ -1,0 +1,56 @@
+
+# Configure a default setup of Home Assistant (frontend, api, etc)
+default_config:
+
+frontend:
+  themes:
+    happy:
+      primary-color: white
+      text-primary-color: black
+      background-primary-color: #cefe8e
+      
+light:
+  - platform: mqtt
+    name: "LED"
+    state_topic: "livingroom/lights/state"
+    command_topic: "livingroom/lights/com"
+    payload_on: "1"
+    payload_off: "0"
+    optimistic: true
+    qos: 1
+
+sensor:
+  - platform: mqtt
+    name: "Random sensor"
+    state_topic: "dash/random_sensor"
+    unit_of_measurement: "%"
+    value_template: "{{ value_json.rand }}"
+
+
+# Text to speech
+tts:
+  - platform: google_translate
+
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 103.21.244.0/22
+    - 103.22.200.0/22
+    - 103.31.4.0/22
+    - 104.16.0.0/13
+    - 104.24.0.0/14
+    - 108.162.192.0/18
+    - 131.0.72.0/22
+    - 141.101.64.0/18
+    - 162.158.0.0/15
+    - 172.64.0.0/13
+    - 173.245.48.0/20
+    - 188.114.96.0/20
+    - 190.93.240.0/20
+    - 197.234.240.0/22
+    - 198.41.128.0/17
+    - 127.0.0.1
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml

@@ -1,5 +1,2 @@
 .DS_Store
 .vscode
-home_wifi_build/homeassistant/*
-!home_wifi_build/homeassistant/docker-compose.yml
-!home_wifi_build/homeassistant/mosquitto/config/mosquitto.conf
