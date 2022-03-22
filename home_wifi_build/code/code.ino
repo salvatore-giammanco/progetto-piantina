@@ -1,49 +1,76 @@
 #include "wifi_server.h"
-
-int s_to_us = 1000000;
-RTC_DATA_ATTR int boot = 0;
+#include <time.h>
 
 void setup() {
-  pinMode(RELAY_PIN, OUTPUT);
-  digitalWrite(RELAY_PIN, LOW);
+  setCpuFrequencyMhz(80);
+  pinMode(PUMP_PIN, OUTPUT);
+  digitalWrite(PUMP_PIN, LOW);
   Serial.begin(115200);
-  while (!Serial) {
-      ; // wait for serial port to connect. Needed for native USB port only
+  while(!Serial);
+  Serial.println("MQTT client loop: "+String(boot++));
+  while((!client.isConnected()) && (millis()<10000)){
+    client.loop();
+    Serial.print(".");
+    delay(500);
   }
-  /*
-  * If the script has been run before, there's already a value for each key
-  * Otherwise set the default one
-  */
-  connectToIoTCloud();
-  // preferences.begin(variablesNamespace, false);
-  Serial.println("Updating variables from cloud");
-  ArduinoCloud.update();
-  Serial.println("Moisture: "+String(soilMoisturePercentAverage));
-  Serial.println("Moisture tresh: "+String(moistureTresh));
-  Serial.println("Water: "+String(waterValue));
-  Serial.println("Sampling (s): "+String(samplingTime));
-  Serial.println("Pump (s): "+String(pumpRuntime));
-  // readSetVar(soilMoisturePercentAverage, "SoilMoistPerc");
-  // readSetVar(moistureTresh, "MoistureTresh");
-  // readSetVar(airValue, "AirValue");
-  // readSetVar(waterValue, "WaterValue");
-  // readSetVar(samplingTime, "SamplingTime");
-  // readSetVar(pumpRuntime, "PumpRuntime");
-  // preferences.end();
-  Serial.println("Started "+String(boot++)+" times");
+  // Start preferences
+  preferences.begin(variablesNamespace, false);
+  if(client.isConnected()){
+    // Send an on state to mean the pump/board has started and is connected
+    client.publish(pump.availabilityTopic, "on");
+    client.publish(soilMoisture.availabilityTopic, "on");
+    client.publish(pump.stateTopic, "off");
+    // Run loop to update all variables from the broker
+    for(int i=0;i<100;i++){
+      client.loop();
+      delay(100);
+    }
+    // Update variables in memory
+    updateVar(pumpOverride.value, pumpOverride.key);
+    updateVar(pumpSwitch.value, pumpSwitch.key);
+    updateVar(moistureTresh.value, moistureTresh.key);
+    updateVar(airValue.value, airValue.key);
+    updateVar(waterValue.value, waterValue.key);
+    updateVar(samplingTime.value, samplingTime.key);
+    updateVar(pumpRuntime.value, pumpRuntime.key);
+    updateVar(wateringTime.value, wateringTime.key);
+  }
+  else{
+    // If we can't get variables from the broker, get the last ones from memory
+    getAllFromMemory();
+  }
+  // Get the last time the pump was run
+  time_t lastTime = preferences.getInt(timeVar);
+  preferences.end();
+  // Deep sleep timer
   Serial.println("Setting timer wakeup");
-  esp_sleep_enable_timer_wakeup(samplingTime * s_to_us);
-  // Start
-  Serial.println("Started");
-  digitalWrite(RELAY_PIN, LOW);
-  soilMoisturePercentAverage = read_soil_moisture_percent_average();
-  Serial.println("Updating soil moisture to cloud");
-  ArduinoCloud.update();
-  if(soilMoisturePercentAverage < moistureTresh){
-    digitalWrite(RELAY_PIN, HIGH);
-    delay(pumpRuntime * sToMs);
+  esp_sleep_enable_timer_wakeup(samplingTime.value * s_to_us);
+  // Start code to wet the plant
+  Serial.println("Reading soil moisture");
+  read_soil_moisture_percent_average();
+  // Debug
+  client.publish(soilMoisture.debugTopic, String(soilMoisture.raw_value), true);
+  ///
+  createJson<float>(soilMoisture.value);
+  client.publish(soilMoisture.stateTopic, buffer, true);
+  if(pumpOverride.value || (pumpSwitch.value && (difftime(time(NULL), lastTime) >= (wateringTime.value * 3600)) && (soilMoisture.value < moistureTresh.value))){
+    Serial.println("Running pump for "+String(pumpRuntime.value)+" seconds");
+    digitalWrite(PUMP_PIN, HIGH);
+    client.publish(pump.stateTopic, "on");
+    delay(pumpRuntime.value * sToMs);
+    digitalWrite(PUMP_PIN, LOW);
+    client.publish(pump.stateTopic, "off");
   }
-  Serial.println("Going to sleep for "+String(samplingTime)+" seconds");
+  else{
+    Serial.println("Condition to water plant not met, pump is off");
+    client.publish(pump.stateTopic, "off");
+  }
+  delay(2000);
+  // Send an off state to mean the pump/board is going to sleep
+  client.publish(pump.availabilityTopic, "off");
+  client.publish(soilMoisture.availabilityTopic, "off");
+  // Deep sleep
+  Serial.println("Going into sleep for "+String(samplingTime.value)+" seconds");
   esp_deep_sleep_start();
 }
 

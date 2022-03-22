@@ -4,73 +4,87 @@
 #include "memory.h"
 #include "utils.h"
 #include <WiFi.h>
-#include <ArduinoIoTCloud.h>
-#include <Arduino_ConnectionHandler.h>
+#include <EspMQTTClient.h>
+#include <ArduinoJson.h>
 
-const char DEVICE_LOGIN_NAME[]  = "a5cb482c-d6a0-4788-ab4e-90209d6bd475";
-const char DEVICE_KEY[]  = "S7FXNBGKAOSCIVDOJASW";    // Secret device password
-const char SSID[] = "FASTWEB-M4TDm4-2.4GHZ";    // Network SSID (name)
-const char PASS[] = "6j6dP38v22";    // Network password (use for WPA, or use as key for WEP)
-bool synced = false;
-float soilMoisturePercentAverage;
-float moistureTresh; //Moisture percentage treshold
-float waterValue; //Value the moisture sensor gives when submerged in water
-int samplingTime; //Seconds between two consecutive samplings of the soil mosture
-int pumpRuntime; //Seconds the pump runs when activated
+StaticJsonDocument<250> sensorJson;
+char buffer[250];
 
-void updateOnSync(){
-  Serial.println("Thing Properties synchronised");
-  synced = true;
+template<typename T>
+void createJson(T value) {
+  sensorJson.clear();
+  sensorJson["value"] = value;
+  serializeJson(sensorJson, buffer);
 }
 
-void initProperties(){
-  ArduinoCloud.setBoardId(DEVICE_LOGIN_NAME);
-  ArduinoCloud.setSecretDeviceKey(DEVICE_KEY);
-  ArduinoCloud.addProperty(soilMoisturePercentAverage, READWRITE, ON_CHANGE, NULL, 1);
-  ArduinoCloud.addProperty(moistureTresh, READWRITE, ON_CHANGE, NULL, 1);
-  ArduinoCloud.addProperty(airValue, READWRITE, ON_CHANGE, NULL, 1);
-  ArduinoCloud.addProperty(waterValue, READWRITE, ON_CHANGE, NULL, 1);
-  ArduinoCloud.addProperty(samplingTime, READWRITE, ON_CHANGE, NULL, 1);
-  ArduinoCloud.addProperty(pumpRuntime, READWRITE, ON_CHANGE, NULL, 1);
-  // ArduinoCloud.addProperty(led_switch, READWRITE, ON_CHANGE, onLedSwitchChange);
-}
+EspMQTTClient client(
+  SSID,
+  PASS,
+  MQTTBrokerIP, // MQTT Broker server ip
+  MQTTUser,
+  MQTTPass,
+  "Esp32",
+  MQTTBrokerPort // The MQTT port, default to 1883. this line can be omitted
+);
 
-WiFiConnectionHandler ArduinoIoTPreferredConnection(SSID, PASS);
-
-void connectToIoTCloud() {
-  // Serial.print("Connecting to ");
-  // Serial.println(SSID);
-  
-  // WiFi.begin(SSID, PWD);
-  
-  // while (WiFi.status() != WL_CONNECTED) {
-  //     Serial.print(".");
-  //     delay(500);
-  //     // we can even make the ESP32 to sleep
-  // }
-  // Serial.print("Connected. IP: ");
-  // Serial.println(WiFi.localIP());
-  initProperties();
-  ArduinoCloud.begin(ArduinoIoTPreferredConnection);
-  setDebugMessageLevel(1);
-  ArduinoCloud.printDebugInfo();
-  Serial.println("Connecting to WiFi");
-  while (WiFi.status() != WL_CONNECTED) {
-    ArduinoCloud.update();
-    Serial.print(".");
-    delay(500);
-  }
-  Serial.print("Connected. IP: ");
-  Serial.println(WiFi.localIP());
-  Serial.println("Connecting to Arduino IoT and syncing variables");
-  ArduinoCloud.addCallback(ArduinoIoTCloudEvent::SYNC, updateOnSync);
-  while(!synced){
-    ArduinoCloud.update();
-    Serial.print(".");
-    delay(500);
-  }
-  Serial.println("Connected");
-  delay(1000);
+void onConnectionEstablished(){
+  Serial.println("Connection established");
+  client.subscribe(pumpOverride.commandTopic, [](const String & payload) {
+    Serial.println("Received command for Pump Override");
+    if (payload == "on") {
+      Serial.println("Turning Pump Override on");
+      pumpOverride.value = true;
+      client.publish(pumpOverride.stateTopic, "on");
+    }
+    else if (payload == "off") {
+      Serial.println("Turning Pump Override off");
+      pumpOverride.value = false;
+      client.publish(pumpOverride.stateTopic, "off");
+    }
+  }, 1);
+  client.subscribe(pumpSwitch.commandTopic, [](const String & payload) {
+    Serial.println("Received command for Pump Switch");
+    if (payload == "on") {
+      Serial.println("Turning Pump Switch on");
+      pumpSwitch.value = true;
+      client.publish(pumpSwitch.stateTopic, "on");
+    }
+    else if (payload == "off") {
+      Serial.println("Turning Pump Switch off");
+      pumpSwitch.value = false;
+      client.publish(pumpSwitch.stateTopic, "off");
+    }
+  }, 1);
+  client.subscribe(moistureTresh.stateTopic, [](const String & payload) {
+    Serial.println("Received moisture_tresh");
+    moistureTresh.value = payload.toFloat();
+    Serial.println("moisture_tresh value: "+String(moistureTresh.value));
+  }, 1);
+  client.subscribe(airValue.stateTopic, [](const String & payload) {
+    Serial.println("Received air_value");
+    airValue.value = payload.toInt();
+    Serial.println("air_value value: "+String(airValue.value));
+  }, 1);
+  client.subscribe(waterValue.stateTopic, [](const String & payload) {
+    Serial.println("Received water_value");
+    waterValue.value = payload.toInt();
+    Serial.println("water_value value: "+String(waterValue.value));
+  }, 1);
+  client.subscribe(samplingTime.stateTopic, [](const String & payload) {
+    Serial.println("Received sampling_time");
+    samplingTime.value = payload.toInt();
+    Serial.println("sampling_time value: "+String(samplingTime.value));
+  }, 1);
+  client.subscribe(pumpRuntime.stateTopic, [](const String & payload) {
+    Serial.println("Received pump_runtime");
+    pumpRuntime.value = payload.toInt();
+    Serial.println("pump_runtime value: "+String(pumpRuntime.value));
+  }, 1);
+  client.subscribe(wateringTime.stateTopic, [](const String & payload) {
+    Serial.println("Received watering_time");
+    wateringTime.value = payload.toInt();
+    Serial.println("watering_time value: "+String(wateringTime.value));
+  }, 1);
 }
 
 #endif
