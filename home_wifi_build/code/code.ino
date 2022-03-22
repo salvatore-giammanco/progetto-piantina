@@ -2,6 +2,7 @@
 #include <time.h>
 
 void setup() {
+  delay(500);
   setCpuFrequencyMhz(80);
   pinMode(PUMP_PIN, OUTPUT);
   digitalWrite(PUMP_PIN, LOW);
@@ -16,6 +17,7 @@ void setup() {
   // Start preferences
   preferences.begin(variablesNamespace, false);
   if(client.isConnected()){
+    Serial.println("Fetching variables from the broker.");
     // Send an on state to mean the pump/board has started and is connected
     client.publish(pump.availabilityTopic, "on");
     client.publish(soilMoisture.availabilityTopic, "on");
@@ -37,6 +39,7 @@ void setup() {
   }
   else{
     // If we can't get variables from the broker, get the last ones from memory
+    Serial.println("Couldn't connect to the broker, fetchin vars from memory.");
     getAllFromMemory();
   }
   // Get the last time the pump was run

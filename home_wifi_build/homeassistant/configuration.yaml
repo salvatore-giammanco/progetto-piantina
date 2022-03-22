@@ -1,24 +1,104 @@
 
 # Configure a default setup of Home Assistant (frontend, api, etc)
 default_config:
-      
-light:
-  - platform: mqtt
-    name: "LED"
-    state_topic: "livingroom/lights/state"
-    command_topic: "livingroom/lights/com"
-    payload_on: "1"
-    payload_off: "0"
-    optimistic: true
-    qos: 1
 
 sensor:
   - platform: mqtt
-    name: "Random sensor"
-    state_topic: "dash/random_sensor"
+    name: Moisture value
+    state_topic: "abegghome/moisture/state"
     unit_of_measurement: "%"
-    value_template: "{{ value_json.rand }}"
+    value_template: "{{ value_json.value | round(1) }}"
+    availability:
+      topic: "abegghome/moisture/availability"
+      payload_available: "on"
+      payload_not_available: "off"
+    expire_after: 60
+    qos: 1
+    unique_id: sensor.moisture_value
+  - platform: mqtt
+    name: Moisture Raw value
+    state_topic: "abegghome/moisture/debug"
+    unit_of_measurement: "%"
+    value_template: "{{ value_json.value }}"
+    qos: 1
+    unique_id: sensor.moisture_value_raw
+binary_sensor:
+  - platform: mqtt
+    name: Pump
+    state_topic: "abegghome/pump/state"
+    payload_on: "on"
+    payload_off: "off"
+    availability:
+      topic: "abegghome/pump/availability"
+      payload_available: "on"
+      payload_not_available: "off"
+    expire_after: 60
+    qos: 1
+    unique_id: sensor.pump
 
+input_number:
+  air_value:
+    name: Air Value
+    initial: 2000
+    min: 0
+    max: 4000
+    step: 10
+    icon: mdi:air-filter
+    mode: box
+  water_value:
+    name: Water Value
+    initial: 1000
+    min: 0
+    max: 4000
+    step: 10
+    icon: mdi:waves
+    mode: box
+  pump_runtime:
+    name: Pump Runtime
+    initial: 5
+    min: 0
+    max: 60
+    step: 1
+    unit_of_measurement: "seconds"
+    icon: mdi:water-pump
+    mode: box
+  moisture_sampling_time:
+    name: Moisture Sampling Time
+    initial: 300
+    min: 10
+    max: 3600
+    step: 10
+    unit_of_measurement: "seconds"
+    icon: mdi:water-sync
+    mode: box
+  watering_time:
+    name: Watering Time
+    initial: 1
+    min: 1
+    max: 24
+    step: 1
+    unit_of_measurement: "hours"
+    icon: mdi:water-check
+    mode: box
+  moisture_tresh:
+    name: Moisture Treshold
+    initial: 50
+    min: 0
+    max: 100
+    step: 1
+    unit_of_measurement: "%"
+    icon: mdi:water-percent-alert
+    mode: slider
+
+input_boolean:
+  switch_pump:
+    name: Pump switch
+    initial: on
+    icon: mdi:pump
+  pump_override:
+    name: Pump override
+    initial: off
+    icon: mdi:radiobox-marked
 
 # Text to speech
 tts:
