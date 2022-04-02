@@ -4,16 +4,17 @@
 #include <Preferences.h>
 
 Preferences preferences;
-int s_to_us = 1000000;
+static const int sToUs = 1000000;
+static const int connectionTimeoutSeconds = 10;
 RTC_DATA_ATTR int boot = 0;
-short NumReadings = 10; // Read moisture 10 times
-int ReadingsInt = 1000; // Read every 30 seconds
-const char SSID[] = "ssid";    // Network SSID (name)
-const char PASS[] = "pass";    // Network password (use for WPA, or use as key for WEP)
-const char MQTTBrokerIP[] = "192.168.1.84";
-const char MQTTUser[] = "luigi";
-const char MQTTPass[] = "pass";
-const short MQTTBrokerPort = 8883;
+static const short NumReadings = 10; // Read moisture 10 times
+static const int ReadingsInt = 1000; // Read every 30 seconds
+static const char SSID[] = "ssid";    // Network SSID (name)
+static const char PASS[] = "pass";    // Network password (use for WPA, or use as key for WEP)
+static const char MQTTBrokerIP[] = "192.168.1.84";
+static const char MQTTUser[] = "luigi";
+static const char MQTTPass[] = "pass";
+static const short MQTTBrokerPort = 8883;
 static const int sToMs = 1000; // Conversion from Seconds to mS
 static const long DefaultMS_minute = 60 * sToMs; //Milliseconds per minute
 static const long DefaultMS_hour = (long)DefaultMS_minute*60; //Milliseconds per hour
