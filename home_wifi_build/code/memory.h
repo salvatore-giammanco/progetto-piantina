@@ -118,7 +118,7 @@ struct AirValue: MQTTtopics {
 		stateTopic = "abegghome/air_value/state";
 	}
 
-	int value;
+	float value;
 } airValue;
 
 struct WaterValue: MQTTtopics {
@@ -130,7 +130,7 @@ struct WaterValue: MQTTtopics {
 		stateTopic = "abegghome/water_value/state";
 	}
 
-	int value;
+	float value;
 } waterValue;
 
 struct SamplingTime: MQTTtopics {
@@ -196,8 +196,8 @@ void getAllFromMemory(){
 	pumpSwitch.value = preferences.getBool(pumpSwitch.key.c_str());
 	moistureTresh.value = preferences.getFloat(moistureTresh.key.c_str());
 	soilMoisture.value = preferences.getInt(soilMoisture.key.c_str());
-	airValue.value = preferences.getInt(airValue.key.c_str());
-	waterValue.value = preferences.getInt(waterValue.key.c_str());
+	airValue.value = preferences.getFloat(airValue.key.c_str());
+	waterValue.value = preferences.getFloat(waterValue.key.c_str());
 	samplingTime.value = preferences.getInt(samplingTime.key.c_str());
 	pumpRuntime.value = preferences.getInt(pumpRuntime.key.c_str());
 	wateringTime.value = preferences.getInt(wateringTime.key.c_str());

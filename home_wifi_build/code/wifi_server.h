@@ -71,13 +71,13 @@ static esp_err_t messageHandler(esp_mqtt_event_handle_t event){
 	}
 	else if(event_topic==airValue.stateTopic){
 		Serial.println("Received air_value");
-		airValue.value = event_data.toInt();
+		airValue.value = event_data.toFloat();
 		Serial.println("air_value value: "+String(airValue.value));
 		updateVar(airValue.value, airValue.key);
 	}
 	else if(event_topic==waterValue.stateTopic){
 		Serial.println("Received water_value");
-		waterValue.value = event_data.toInt();
+		waterValue.value = event_data.toFloat();
 		Serial.println("water_value value: "+String(waterValue.value));
 		updateVar(waterValue.value, waterValue.key);
 	}
@@ -185,7 +185,7 @@ void wifi_mqtt_connect(){
 }
 
 void wifi_mqtt_disconnect(){
-	esp_mqtt_client_disconnect(client);
+	esp_mqtt_client_destroy(client);
 	WiFi.disconnect();
 	Serial.println("Disconnecting");
 	while(WiFi.isConnected()){
