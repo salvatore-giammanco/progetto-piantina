@@ -48,20 +48,22 @@ binary_sensor:
 input_number:
   air_value:
     name: Air Value
-    initial: 2000
+    initial: 3.3
     min: 0
-    max: 4000
-    step: 10
+    max: 3.3
+    step: 0.1
     icon: mdi:air-filter
     mode: box
+    unit_of_measurement: "volts"
   water_value:
     name: Water Value
-    initial: 1000
+    initial: 0
     min: 0
-    max: 4000
-    step: 10
+    max: 3.3
+    step: 0.1
     icon: mdi:waves
     mode: box
+    unit_of_measurement: "volts"
   pump_runtime:
     name: Pump Runtime
     initial: 5
