@@ -5,6 +5,7 @@ void setup() {
 	delay(500);
 	setCpuFrequencyMhz(80);
 	pinMode(PUMP_PIN, OUTPUT);
+	pinMode(MOISTURE_READING_PIN, INPUT);
 	digitalWrite(PUMP_PIN, LOW);
 	Serial.begin(115200);
 	while(!Serial);

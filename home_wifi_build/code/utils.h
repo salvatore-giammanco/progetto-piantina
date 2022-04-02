@@ -20,8 +20,10 @@ void print_on_serial(T p){
 //It performs NumberReadings number of readings of the soil moisture, at times ReadingsInt
 //The final moisture sample value is the average of all the readings
 //The sampled values are converted into percentages based on AirValue and WaterValue
-int read_soil_moisture(){
-	int reading = analogRead(MOISTURE_READING_PIN);
+float read_soil_moisture(){
+	// Convert the analog read into voltage
+	// ESP32 returns a value from 0 (0V) to 4095 (3.3V)
+	float reading = ((float) analogRead(MOISTURE_READING_PIN)/4095.0)*3.3;
 	Serial.println("Analog read: "+String(reading));
 	return reading;
 }
