@@ -22,7 +22,7 @@ Di seguito vi proponiamo le componenti minime da acquistare per realizzare il pr
 
 # Creare i certificati SSL per MQTT
 
-Nella cartella `homeassistant/mosquitto/certs` c'è lo script `certificates.sh` che serve a creare dei certificati SSL usando OpenSSL in modo da crittografare la comunicazione tra il broker MQTT e i client. Una volta girato lo script, scegliete le password e i parametri dei certificati come preferite, facendo attenzione a:
+Nella cartella `homeassistant` c'è lo script `certificates.sh` che serve a creare dei certificati SSL usando OpenSSL in modo da crittografare la comunicazione tra il broker MQTT e i client. Una volta girato lo script, scegliete le password e i parametri dei certificati come preferite, facendo attenzione a:
 
 - Organizational Unit Name: verrà chiesto 2 volte, questi due nomi devono essere diversi
 - Common Name: dev'essere il DNS name del pc dove fate girare mosquitto
