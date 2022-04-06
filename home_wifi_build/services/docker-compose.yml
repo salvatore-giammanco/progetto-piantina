@@ -21,8 +21,17 @@ services:
     ports:
     - "8883:8883"
   cloudflared:
-    image: erisamoe/cloudflared:2022.3.4
+    image: cloudflare/cloudflared:2022.3.4
     container_name: cloudflared
     network_mode: host
-    command: "tunnel --loglevel debug run --token redacted"
+    command: "tunnel --no-autoupdate run --token redacted"
     restart: 'on-failure'
+    user: root
+  # Decomment if you're running this on a Raspberry Pi
+  # Replace the similar code above with this
+  # cloudflared:
+  #   image: erisamoe/cloudflared:2022.3.4
+  #   container_name: cloudflared
+  #   network_mode: host
+  #   command: "tunnel run --token redacted"
+  #   restart: 'on-failure'
