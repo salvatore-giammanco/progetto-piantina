@@ -1,10 +1,12 @@
+# Progetto Pianta
+
 ## Versione casalinga
 
-In questa cartella è raccolto il codice per far funzionare il progetto casalingo, che sfrutta un modulo WiFi ESP32 per comunicare con il wifi di casa.
+In questa cartella è raccolto il codice per far funzionare il progetto casalingo, che sfrutta la scheda ESP32 per comunicare con il wifi di casa.
 
 ### Perchè usiamo la scheda ESP32 invece di Arduino?
 
-Perchè la scheda ESP32 consente di fare le stesse cose, ma ha un più un modulo WiFi e un modulo Bluetooth integrati. A dire il vero, è più potente di Arduino, in quanto è dual core e possiede una memoria flash. In pratica ha tutto quello che ci serve in una soluzione compatta.
+Perchè la scheda ESP32 consente di fare le stesse cose, ma ha in più un modulo WiFi e un modulo Bluetooth integrati. A dire il vero, è più potente di Arduino, in quanto è dual core e possiede una memoria flash. In pratica ha tutto quello che ci serve in una soluzione compatta.
 
 ## Componenti da acquistare (DRAFT)
 
@@ -18,9 +20,16 @@ Di seguito vi proponiamo le componenti minime da acquistare per realizzare il pr
 - [Sensore di umidità](https://amzn.to/33fi18c) (attenzione a quale sensore prendete, questo che proponiamo è resistente alla corrosione)
 - [Pompe per l'acqua](https://amzn.to/33sKqHE)
 - Qualunque set di relay va bene, ad esempio [Relay](https://amzn.to/3tpK53x) ma se pensate che ve ne servano di meno si trovano molti prodotto equivalenti
-- Power bank/batteria
+- Batterie al litio (formato 18650, si trovano in qualunque negozio di elettronica). Le normali batterie alcaline non hanno un output di corrente sufficiente.
+- (Opzionale) Un Raspberry Pi 2 Modello B, o versione successiva.
 
-# Creare i certificati SSL per MQTT
+## Guida
+
+In questa guida vi spieghiamo come impostare il vostro progetto di giardino autonomo utilizzando la scheda ESP32, il protoccolo MQTT e il software Home Assistant.
+
+- [Creare i certificati SSL per MQTT](#creare-i-certificati-ssl-per-mqtt)
+
+### Creare i certificati SSL per MQTT
 
 Nella cartella `homeassistant` c'è lo script `certificates.sh` che serve a creare dei certificati SSL usando OpenSSL in modo da crittografare la comunicazione tra il broker MQTT e i client. Una volta girato lo script, scegliete le password e i parametri dei certificati come preferite, facendo attenzione a:
 
