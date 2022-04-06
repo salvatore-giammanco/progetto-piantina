@@ -15,6 +15,7 @@ StaticJsonDocument<250> sensorJson;
 char buffer[250];
 esp_mqtt_client_config_t mqtt_cfg;
 esp_mqtt_client_handle_t client;
+static bool mqttConnected = false;
 
 template<typename T>
 void createJson(T value) {
@@ -105,21 +106,10 @@ static esp_err_t messageHandler(esp_mqtt_event_handle_t event){
 	preferences.end();
 }
 
-
-static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data)
-{
-	Serial.println("Called loop handler");
-    if(event_id == MQTT_EVENT_ERROR){
-		Serial.println("Couldn't connect to the broker/wifi, fetching vars from memory.");
-		getAllFromMemory();
-	}
-}
-
-
 static esp_err_t mqtt_event_callback_handler(esp_mqtt_event_handle_t event) {
 	switch(event->event_id){
 		case MQTT_EVENT_CONNECTED:
-			Serial.println("Connection established");
+			Serial.println("MQTT connection established");
 			Serial.println("Fetching variables from the broker.");
 			// Send an on state to mean the pump/board has started and is connected
 			esp_mqtt_client_publish(client, pump.availabilityTopic.c_str(), "on", 2, 1, 0);
@@ -135,10 +125,11 @@ static esp_err_t mqtt_event_callback_handler(esp_mqtt_event_handle_t event) {
 			esp_mqtt_client_subscribe(client, pumpRuntime.stateTopic.c_str(), 1);
 			esp_mqtt_client_subscribe(client, wateringTime.stateTopic.c_str(), 1);
 			Serial.println("Subscribed to all topics");
+			mqttConnected = true;
 			break;
 		case MQTT_EVENT_DISCONNECTED:
 			ESP_LOGI("TEST", "MQTT event: %d. MQTT_EVENT_DISCONNECTED", event->event_id);
-			//esp_mqtt_client_reconnect (event->client); //not needed if autoconnect is enabled
+			mqttConnected = false;
 			break;
 		case MQTT_EVENT_SUBSCRIBED:
 			ESP_LOGI("TEST", "MQTT msgid= %d event: %d. MQTT_EVENT_SUBSCRIBED", event->msg_id, event->event_id);
@@ -155,14 +146,6 @@ static esp_err_t mqtt_event_callback_handler(esp_mqtt_event_handle_t event) {
 			ESP_LOGI("TEST","Incoming data: %.*s %.*s\n", event->topic_len, event->topic, event->data_len, event->data);
 			Serial.println("Received message");
 			messageHandler(event);
-			break;
-		case MQTT_EVENT_BEFORE_CONNECT:
-			ESP_LOGI("TEST", "MQTT event: %d. MQTT_EVENT_BEFORE_CONNECT", event->event_id);
-			break;
-		case MQTT_EVENT_ERROR:
-			Serial.println("Called callback handler");
-			Serial.println("Couldn't connect to the broker/wifi, fetching vars from memory.");
-			getAllFromMemory();
 			break;
 	}
 	return ESP_OK;
@@ -196,10 +179,16 @@ void wifi_mqtt_connect(){
 		Serial.print("Connected: ");
 		Serial.println(WiFi.localIP());
 		err = esp_mqtt_client_start(client);
-		Serial.println("MQTT started");
+		delay(connectionTimeoutSeconds * sToMs);
+		if(!mqttConnected){
+			// Stop the client, otherwise it'll attempt to connect again
+			esp_mqtt_client_stop(client);
+			Serial.println("Couldn't connect to the MQTT broker, fetching vars from memory.");
+			getAllFromMemory();
+		}
 	} else {
-		Serial.println("Not connected, sending error event");
-		esp_mqtt_client_register_event(client, MQTT_EVENT_ERROR, mqtt_event_handler, NULL);
+		Serial.println("Couldn't connect to the wifi, fetching vars from memory.");
+		getAllFromMemory();
 	}
 }
 
