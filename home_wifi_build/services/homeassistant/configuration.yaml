@@ -2,9 +2,6 @@
 # Configure a default setup of Home Assistant (frontend, api, etc)
 default_config:
 
-logger:
-  default: debug
-
 mqtt: 
   broker: !secret mqtt_ip
   port: !secret mqtt_port
