@@ -23,9 +23,7 @@ static const int PUMP_PIN = 33;
 static const char variablesNamespace[] = "constants";
 static const char timeVar[] = "time";
 static const unsigned char DSTroot_CA[] PROGMEM = R"EOF(
------BEGIN CERTIFICATE-----
-...
------END CERTIFICATE-----
+COPY HERE THE CONTENT OF CA.CRT
 )EOF";
 
 

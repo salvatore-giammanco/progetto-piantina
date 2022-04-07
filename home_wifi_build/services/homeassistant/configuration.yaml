@@ -3,11 +3,6 @@
 default_config:
 
 mqtt: 
-  broker: !secret mqtt_ip
-  port: !secret mqtt_port
-  client_id: home-assistant
-  username: !secret mqtt_user
-  password: !secret mqtt_password
   certificate: ca.crt
   tls_insecure: true
 
