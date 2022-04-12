@@ -30,13 +30,18 @@ In questa guida vi spieghiamo come impostare il vostro giardino autonomo utilizz
   - [Scaricare le librerie per ESP32 su VS Code](#scaricare-le-librerie-per-esp32-su-vs-code)
   - [Caricare il codice](#caricare-il-codice)
 - [Docker Containers](#docker-containers)
-  - [Home Assistnat su Windows](#home-assistnat-su-windows)
+  - [Home Assistant su Windows](#home-assistnat-su-windows)
   - [Password per il Broker MQTT](#password-per-il-broker-mqtt)
   - [Certificati SSL per il broker MQTT](#certificati-ssl-per-il-broker-mqtt)
   - [Testare che il broker MQTT funzioni](#testare-che-il-broker-mqtt-funzioni)
-  - [Connettere Home Assistant al broker MQTT](#connettere-home-assistant-al-broker-mqtt)
+  - [Connettere Home Assistant ed ESP32 al broker MQTT](#connettere-home-assistant-ed-esp32-al-broker-mqtt)
   - [(Opzionale) Cloudflared](#opzionale-cloudflared)
+- [Finalizzazione del Codice per la scheda ESP32](#finalizzazione-del-codice-per-la-scheda-esp32)
 - [Home Assistant](#home-assistant)
+  - [Esempio e spiegazione funzionamento](#esempio-e-spiegazione-funzionamento)
+  - [Automazioni su HA](#automazioni-su-ha)
+  - [Blueprints](#blueprints)
+  - [Modificare i topic](#modificare-i-topic)
 
 ## Prerequisiti
 
@@ -176,7 +181,7 @@ mosquitto_pub -h <hostname> -t test -p 8883 -u <username> -P <password> --cafile
 ```
 dove in `<messaggio>` potete inserire quello che preferite. Nel terminale dove avete girato il comando `mosquitto_sub` dovreste vedere comparire lo stesso messaggio.
 
-### Connettere Home Assistant al broker MQTT
+### Connettere Home Assistant ed ESP32 al broker MQTT
 
 Il broker MQTT serve a far comunicare tra loro HA e la scheda ESP32. Nella sezione precedente abbiamo copiato il certificato `ca.crt` nella cartella `homeassistant`, adesso possiamo terminare la configurazione di HA per collegarlo correttamente al broker.
 
@@ -189,6 +194,14 @@ Adesso che sappiamo l'IP locale, aprite una pagina web e andate su `http://local
 Una volta terminato, HA dovrebbe essere in grado di connettersi al broker. Per verificarlo, una volta aggiunta l'integrazione MQTT cliccate su `Configure` nella card, si aprirà una pagina dove, oltre alla possibilità di modificare la configurazione dell'integrazione, sono disponibili dei tool per ascoltare un topic del broker e per mandare messaggi. Così come fatto a mano nella sezione precedente, potete verificare che il broker stia funzionando mandando messaggi e verificando che li riceviate sul topic in cui siete in ascolto, come mostrato nella foto sotto
 
 ![mqtt_topic.jpg](pics/mqtt_topic.jpg)
+
+Prima di continuare, manca un ultimo passaggio: abbiamo collegato HA al broker MQTT, ma non la scheda ESP32. Per permettere anche alla scheda di connettersi, dobbiamo inserire le stesse informazioni inserite in HA anche nel codice, più precisamente nel file `code/memory.h` dove troviamo le seguenti variabili:
+- `MQTTBrokerIP`: IP locale della macchina dove gira il broker MQTT;
+- `MQTTUser`: user per accedere al broker MQTT;
+- `MQTTPass`: password dello user al punto precedente;
+- `MQTTBrokerPort`: porta su cui ascolta il broker MQTT, dovrebbe essere la 8883 a meno che non l'abbiate cambiata;
+
+Valorizzate le variabili con gli stessi valori inseriti in HA.
 
 ### (Opzionale) Cloudflared
 
@@ -204,9 +217,79 @@ Aprite il file `docker-compose.yml` e inserite il token nella riga `command`. Ad
 - Il primo servizio usa l'immagine docker ufficiale fornita da Cloudflare. L'unico problema di questa immagine è che è fornita soltanto per architetture `amd64`, quindi non gira su Raspberry Pi;
 - Il secondo serve solo se prevedete di far girare il tunnel su Raspberry Pi, in quanto è la stessa immagine ma buildata anche per architetture `armhf` ed altre.
 
-Una volta decommentato uno dei due servizi, fateli girare con
+Una volta decommentato uno dei due servizi, fatelo girare con
 ```
 docker-compose up -d
 ```
 
+## Finalizzazione del Codice per la scheda ESP32
+
+Giusto per ricapitolare, nel corso di questa guida abbiamo modificato le seguenti varibili nel file `code/memory.h`:
+- `SSID`: ssid della vostra rete wifi;
+- `PASS`: password del vostro wifi;
+- `DSTroot_CA`: contenuto del certificato SSL `ca.crt`;
+- `MQTTBrokerIP`: IP locale della macchina dove gira il broker MQTT;
+- `MQTTUser`: user per accedere al broker MQTT;
+- `MQTTPass`: password dello user al punto precedente;
+- `MQTTBrokerPort`: porta su cui ascolta il broker MQTT, dovrebbe essere la 8883 a meno che non l'abbiate cambiata;
+
+Se avete valorizzato corretamente le variabili, il codice per la scheda ESP32 è finalmente completo e come già visto in precedenza possiamo caricarlo: collegate la scheda ad una presa USB del pc, configurate VS Code in modo che la riconosca (se non l'avete già fatto prima) e premete il tasto `Arduino: Upload`.
+
 ## Home Assistant
+
+Qui faremo una veloce overview di HA e di come usarlo. I file principali che lo riguardano sono nella cartella `homeassistant`:
+- `configuration.yaml`: file con la configurazione generale di HA, include tutti gli altri file
+- `automations.yaml`: automazioni gestite da HA
+- `blueprints`: cartella che contiene i blueprint utili a creare automazioni
+
+Ci sono altri due file, `scripts.yaml` e `scenes.yaml`, che però non trattiamo. 
+
+Home Assistant è uno strumento che offre due funzionalità principali:
+- Una semplice interfaccia per creare dashboard allo scopo di monitorare lo stato di ogni dispositivo connesso
+- Vari strumenti interattivi che permettono di interagire con i dispositivi a distanza
+
+Ci sono vari modi di collegare un dispositivo ad HA, noi abbiamo sfruttato la sua integrazione MQTT per collegarlo al nostro broker MQTT, tramite il quale HA è in grado di scambiare messaggi con gli altri dispositivi collegati allo stesso broker (nel nostro caso, soltanto la scheda ESP32).
+
+### Esempio e spiegazione funzionamento
+
+Una volta entrati su Home Assistant, la prima cosa da fare è creare una dashboard dalla quale monitorare e interagire con la nostra scheda ESP32. In `Configuration->Dashboard` possiamo creare una nuova dashboard che chiameremo `Plant Guard`. Apriamo la dashboard e modifichiamola cliccando i 3 puntini in alto a destra: qui potremo aggiungere tutta una serie di card che ci permetteranno di monitorare ed interagire in modo differente con i vari dispositivi.
+
+Ad esempio, nel codice della scheda ESP32 esiste una variabile booleana `pump_override` che permette di far partire la pompa dell'acqua a prescindere da quale sia l'umidità della pianta: diciamo che vogliamo avere un bottone su HA che ci permetta di impostare il suo valore a `True\False` a piacimento e che ci permetta allo stesso tempo di conoscere anche il suo valore. Nel codice, la scheda EPS32 ascolta un topic del broker MQTT, controlla che ci siano nuovi messaggi e in base a questi messaggi aggiorna il valore di questa variabile: tutto quello che dobbiamo fare è inviare un messaggio sul broker con il contenuto giusto; inoltre, la scheda manda indietro un messaggio al broker per dire che ha aggiornato la variabile. Nel file `configuration.yaml` di HA abbiamo definito una serie di sensori e variabili, quella che ci interessa in questo caso è la variabile `pump_override` definita sotto `input_boolean`: **questa è una variabile booleana di HA** che possiamo modificare dall'interfaccia. Per farlo, andiamo sulla dashboard `Plant Guard` e configuriamo un bottone in modo tale che sia collegato a `pump_override`, come mostrato sotto
+
+![button1.png](pics/button1.png)
+![button2.png](pics/button2.png)
+![button3.png](pics/button3.png)
+
+Cliccando sul bottone, questo switcherà il valore della variabile `pump_override`. Ma questa variabile al momento è solo su HA, come facciamo a "collegarla" alla corrispondente variabile `pump_override` presente invece nel codice della scheda ESP32?
+
+### Automazioni su HA
+
+Ci sono vari modi per realizzare quanto scritto sopra, ma nel nostro caso abbiamo preferito usare le automazioni di HA. Questo perchè, diversamente da altre soluzioni, le automazioni sono configurabili interamente dall'interfaccia, ogni loro esecuzione è automaticamente loggata e possono quindi essere monitorate facilmente direttamente da HA. Potete controllare le automazioni presenti sul vostro HA tramite il file `automations.yaml` oppure dall'interfaccia in `Configuration->Automation & Scenes->Automation`. Nel nostro caso le automazioni che permettono di far funzionare il bottone visto prima con la scheda ESP32 sono 2:
+- `Send Pump Override Value`
+- `Set Pump Override Value`
+
+La prima automazione, `Send Pump Override Value`, si attiva quando la variabile di HA `pump_override` cambia valore
+
+![send_override.png](pics/send_override.png)
+
+Circa 10 secondi dopo che `pump_override` ha cambiato valore (cioè 10 secondi dopo aver premuto il bottone nella dashboard `Plant Guard`), questa automazione parte e invia un messaggio con payload `on` (`off` se la variabile era `on` prima) sul topic `abegghome/pump_override/com` del broker MQTT. La scheda ESP32, quando si connette al broker, vede questo messaggio e sa che abbiamo premuto il bottone, quindi aggiorna il valore della corrispondente variabile `pump_override` definita nel suo codice. Fatto ciò, la scheda manda a sua volta un messaggio con payload `on` sul topic `abegghome/pump_override/state`: l'automazione `Set Pump Override Value` ascolta questo topic e, una volta ricevuto il messaggio, sa che la scheda ha aggiornato il valore della sua variabile e si assicura che il valore della variabile corrispondente di HA sia allineato.
+
+![set_override.png](pics/set_override.png)
+
+In maniera molto simile funzionano tutte le altre variabili e automazioni definite nei file di configurazione di HA.
+
+### Blueprints
+
+Le varie automazioni sono tutte molto simili: se variabile `X` di HA cambia, manda un messaggio con il suo nuovo valore su un topic del broker. Per questo motivo, le abbiamo definite una ad una usando dei blueprint, cioè delle automazioni precostruite con alcuni parametri da riempire. Nel nostro caso abbiamo 4 blueprint su cui si basano tutte le automazioni usate, disponibili in `home_wifi_build/services/homeassistant/blueprints/automation`:
+- `send_input_number_float_value.yaml`: manda il valore di una variabile `float` su un topic
+- `send_input_number_value.yaml`: manda il valore di una variabile `int` su un topic
+- `send_switch_value.yaml`: manda il valore di una variabile `bool` su un topic
+- `set_switch_value.yaml`: setta il valore di una variabile `bool` su HA, in base ad un messaggio ricevuto su un topic
+
+### Modificare i topic
+
+Come abbiamo ormai chiarito, tutto lo scambio di info tra ESP32 e HA avviane su vari topic del nostro broker MQTT. I topic devono essere specificati sia nel codice della scheda ESP32 che nella configurazione di HA, facendo attenzione che coincidano.
+
+Per la scheda ESP32, tutti i topic sono salvati nel file `memory.h`: qui abbiamo definito diversi topic per ogni tipo di varibile e li abbiamo raggruppati in delle `struct`.
+
+Per quanto riguarda invece le automazioni di HA, i topic dobbiamo inserirli a mano quando creiamo una nuova automazione partendo dai blueprint visti in precedenza: nella configurazione di `Send Pump Override Value` abbiamo inserito il topic `abegghome/pump_override/com` come visto nell'immagine sopra. Quando modifichiamo/creiamo le automazioni dall'interfaccia, HA aggiorna da solo il file `automations.yaml` con tutti questi valori.
