@@ -25,8 +25,18 @@ Di seguito vi proponiamo le componenti minime da acquistare per realizzare il pr
 
 In questa guida vi spieghiamo come impostare il vostro giardino autonomo utilizzando la scheda ESP32, il protoccolo MQTT e il software Home Assistant.
 
+- [Prerequisiti](#prerequisiti) 
 - [Codice per la Scheda ESP32](#codice-per-la-scheda-esp32)
-- [Creare i certificati SSL per MQTT](#creare-i-certificati-ssl-per-mqtt)
+  - [Scaricare le librerie per ESP32 su VS Code](#scaricare-le-librerie-per-esp32-su-vs-code)
+  - [Caricare il codice](#caricare-il-codice)
+- [Docker Containers](#docker-containers)
+  - [Home Assistnat su Windows](#home-assistnat-su-windows)
+  - [Password per il Broker MQTT](#password-per-il-broker-mqtt)
+  - [Certificati SSL per il broker MQTT](#certificati-ssl-per-il-broker-mqtt)
+  - [Testare che il broker MQTT funzioni](#testare-che-il-broker-mqtt-funzioni)
+  - [Connettere Home Assistant al broker MQTT](#connettere-home-assistant-al-broker-mqtt)
+  - [(Opzionale) Cloudflared](#opzionale-cloudflared)
+- [Home Assistant](#home-assistant)
 
 ## Prerequisiti
 
@@ -38,7 +48,8 @@ Prima di procedere installate:
 - [VSCode Extension per ESP-IDF](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/get-started/vscode-setup.html)
 - [OpenSSL](https://www.openssl.org/), though the easiest way to install it on windows is by installing git ([see here](https://stackoverflow.com/questions/50625283/how-to-install-openssl-in-windows-10))
 - [Docker e Docker-Compose](https://docs.docker.com/compose/)
-  - Siccome ci affideremo molto a Docker, questa guida è pensata per sistemi Linux. Se siete su Windows, assicuratevi di avere installato e configurato correttamente la [WSL](https://docs.docker.com/desktop/windows/wsl/) (versione 2, necessaria per Docker), e già che ci siete installate [Ubuntu 20.04 LTS sulla WSL](https://docs.docker.com/desktop/windows/wsl/). Vi conviene seguire questa guida direttamente dalla WSL in quanto su Ubuntu dovrebbe funzionare tutto correttamente e possiamo fare tutto da terminale. Anche così però, non potrete girare Home Assistant su Docker ma soltanto usando una VM, come spiegato di seguito.
+
+Siccome ci affideremo molto a Docker, questa guida è pensata per sistemi Linux. Se usate Windows, assicuratevi di avere installato e configurato correttamente la [WSL](https://docs.docker.com/desktop/windows/wsl/) (versione 2, necessaria per Docker), e già che ci siete installate [Ubuntu 20.04 LTS sulla WSL](https://docs.docker.com/desktop/windows/wsl/). Vi conviene seguire questa guida direttamente dalla WSL in quanto su Ubuntu dovrebbe funzionare tutto correttamente e possiamo fare tutto da terminale. Anche così però, non potrete girare Home Assistant su Docker ma soltanto usando una VM, come spiegato di seguito.
 
 ## Codice per la Scheda ESP32
 
@@ -85,9 +96,12 @@ Ci sono anche altre variabili non valorizzate ma che al momento non possiamo val
 
 ## Docker Containers
 
-Usiamo 3 docker container per far girare i 3 servizi che ci servono: home assistant (HA di seguito) che fa da front end, mosquitto come broker MQTT e cloudflared per esporre la rete di casa all'esterno (quest'ultimo è opzionale e al momento è commentato nel file `docker-compose.yml`).
+Usiamo 3 docker container per far girare i 3 servizi che ci servono: 
+- Home Assistant (HA di seguito), che fa da front end
+- Mosquitto come broker MQTT per far comunicare Home Assistant con la scheda ESP32
+- Cloudflared per esporre la rete di casa all'esterno (quest'ultimo è opzionale e al momento è commentato nel file `docker-compose.yml`).
 
-Il file che gestisce tutti e 3 i container è `docker-compose.yml`: in questo file dovrete modificare i path sotto la chiave `volumes` sia per `homeassistant` che per `mosquitto` con i path delle cartelle nel vostro pc. Prima di far partire i container, aprite il file `services/mosquitto/condig/mosquitto.config` e commentate con un `#` tutte le righe da `password_file` (compreso) in poi: questo perchè dobbiamo prima creare un utente con password sul broker e i certificati SSL, ma lo faremo in un secondo momento. Adesso, fate partire tutto con
+Il file che gestisce tutti e 3 i container è `docker-compose.yml`: in questo file dovrete modificare i path sotto la chiave `volumes` sia per `homeassistant` che per `mosquitto` con i path delle cartelle nel vostro pc. Prima di far partire i container, aprite il file `services/mosquitto/condig/mosquitto.config` e commentate con un `#` tutte le righe da `password_file` (compreso) in poi: questo perchè dobbiamo prima creare un utente con password e creare i certificati SSL per il broker MQTT, ma lo faremo in un secondo momento. Adesso, fate partire tutto con
 ```
 docker-compose up -d
 ```
@@ -102,7 +116,7 @@ Sfortunatamente, anche usando la WSL2 su Windows [non è possibile far girare HA
 
 ### Password per il Broker MQTT
 
-Il container docker `mosquitto` ha il compito di girare il broker MQTT tramite il quale Home Assistant e la scheda ESP32 comunicano. Il broker è configurato per ascoltare dalla porta `8883`, ma al momento 0non è protetto da password, perciò con il comando
+Il container docker `mosquitto` ha il compito di girare il broker MQTT tramite il quale Home Assistant e la scheda ESP32 comunicano. Il broker è configurato per ascoltare dalla porta `8883`, ma al momento non è protetto da password, perciò con il comando
 ```
 docker exec -it mosquitto sh
 ```
@@ -110,7 +124,7 @@ entrate nel container `mosquitto`. Adesso, dobbiamo creare un'utenza protetta da
 ```
 mosquitto_passwd -c mosquitto/config/mosquitto.passwd <user>
 ```
-dove in `<user>` potete inserire il nome che preferite. Inserite la password e uscite dal container con `exit`, adesso dovreste vedere il file `services/mosquitto/config/mosquitto.passwd`.
+dove in `<user>` potete inserire il nome utente che preferite. Inserite la password e uscite dal container con `exit`, adesso dovreste avere il nuovo file `services/mosquitto/config/mosquitto.passwd`.
 
 ### Certificati SSL per il broker MQTT
 
@@ -119,7 +133,7 @@ Nella cartella `mosquitto/certs` c'è lo script `certificates.sh` che serve a cr
 - Organizational Unit Name: verrà chiesto 2 volte, questi due nomi devono essere diversi
 - Common Name: dev'essere l'**hostname** del pc dove fate girare il broker MQTT. Su ubuntu potete saperlo con il comando `hostname`, mentre su windows andate in `Pannello di controllo->Sistema e sicurezza->Sistema` e prendete il nome del dispositivo.
 
-Al termine dello script dovreste vedere 7 file nella cartella `certs` (compreso `certificates.sh`):
+Terminato lo script dovreste vedere 7 file nella cartella `certs` (compreso `certificates.sh`):
 ```
 ca.crt
 ca.key
@@ -130,7 +144,7 @@ server.csr
 server.key
 ```
 
-Una volta creati i certificati, copiate `ca.crt` nella cartella `homeassistant` (dev'essere nella stessa cartella del file `configuration.yaml`) e inoltre copiate anche il suo contenuto all'interno del codice nel file `memory.h`: qui c'è una variabile chiamata `DSTroot_CA` dove dovrete copiare il contenuto del certificato.
+Una volta creati i certificati, copiate `ca.crt` nella cartella `homeassistant` (dev'essere nella stessa cartella del file `configuration.yaml`) e inoltre copiate anche il suo contenuto nel file `code/memory.h`: qui c'è una variabile chiamata `DSTroot_CA` dove dovrete copiare il contenuto del certificato.
 
 **Nota**: dovete copiare tutto il contenuto del certificato, comprese le righe `-----BEGIN CERTIFICATE-----` ed `-----END CERTIFICATE-----` 
 
@@ -152,7 +166,7 @@ Adesso, possiamo connetterci ad un topic del broker in questo modo
 mosquitto_sub -h <hostname> -p 8883 -u <user> -P
 <password> -t test --cafile ca.crt
 ```
-dove dovete inserire lo username e la password creati nella sezione precedente, e in `hostname` dovete inserire l'hostname del pc dove gira il broker (quello inserito in Common Name durante la creazione dei certificati). Con questo comando ci siamo messi in ascolto sul topic `test` del nostro broker, lasciate il terminale così com'è per il momento.
+dove dovete inserire l'username e la password creati nella sezione precedente, e in `hostname` dovete inserire l'hostname del pc dove gira il broker (quello inserito in Common Name durante la creazione dei certificati). Con questo comando ci siamo messi in ascolto sul topic `test` del nostro broker, lasciate il terminale così com'è per il momento.
 
 **Nota**: anche se sembra che il terminale si sia bloccato, non è così, procedete con la guida.
 
@@ -170,7 +184,7 @@ Assicuratevi che i docker container `homeassistant` e `mosquitto` stiano girando
 
 **Nota**: sia dal router che da qualunque sistema operativo, è possibile specificare un indirizzo IP locale statico in modo che il vostro PC si connetta al router usando sempre e solo questo indirizzo. In questo caso è molto comodo perchè, nel caso il vostro PC dovesse connettersi con in IP diverso al router, dovrete riconfigurare tutto con il nuovo indirizzo IP. Potete trovare diverse guide a seconda del router e del vostro sistema.
 
-Adesso che sappiamo l'IP locale, aprite una pagina web e andate su `http://localhost:8123` per collegarvi direttamente all'interfaccia di Home Assistant. Andate in `Configuration->Devices&Services->Integrations` e cliccate il tasto `Add Integration`, cercate "mqtt" e scegliete la configurazione già presente (la prima). Inserite i dati, cioè l'IP locale del pc dove gira il broker MQTT, la porta `8883`, l'utente e la password per collegarsi al broker. Notate che il certificato `ca.crt`, necessario per comunicare col broker, è già caricato nel file `configuration.yaml` in quanto non è possibile farlo dall'interfaccia.
+Adesso che sappiamo l'IP locale, aprite una pagina web e andate su `http://localhost:8123` per collegarvi direttamente all'interfaccia di Home Assistant. Andate in `Configuration->Devices & Services->Integrations` e cliccate il tasto `Add Integration`, cercate "mqtt" e scegliete la configurazione già presente (la prima). Inserite i dati, cioè l'IP locale del pc dove gira il broker MQTT, la porta `8883`, l'utente e la password per collegarsi al broker. Notate che il certificato `ca.crt`, necessario per comunicare col broker, è già caricato nel file `configuration.yaml` in quanto non è possibile farlo dall'interfaccia.
 
 Una volta terminato, HA dovrebbe essere in grado di connettersi al broker. Per verificarlo, una volta aggiunta l'integrazione MQTT cliccate su `Configure` nella card, si aprirà una pagina dove, oltre alla possibilità di modificare la configurazione dell'integrazione, sono disponibili dei tool per ascoltare un topic del broker e per mandare messaggi. Così come fatto a mano nella sezione precedente, potete verificare che il broker stia funzionando mandando messaggi e verificando che li riceviate sul topic in cui siete in ascolto, come mostrato nella foto sotto
 
