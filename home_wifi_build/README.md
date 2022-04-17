@@ -6,7 +6,7 @@ In questa cartella è raccolto il codice per far funzionare il progetto casaling
 
 Perchè la scheda ESP32 consente di fare le stesse cose, ma ha in più un modulo WiFi e un modulo Bluetooth integrati. A dire il vero, è più potente di Arduino, in quanto è dual core e possiede una memoria flash. In pratica ha tutto quello che ci serve in una soluzione compatta.
 
-## Componenti da acquistare (DRAFT)
+## Componenti da acquistare
 
 Di seguito vi proponiamo le componenti minime da acquistare per realizzare il progetto. I link sono solo dei riferimenti su cosa acquistare, qualunque componente equivalente andrà bene:
 
