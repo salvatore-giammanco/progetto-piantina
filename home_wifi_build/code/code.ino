@@ -48,7 +48,7 @@ void setup() {
 	}
 	// Deep sleep
 	Serial.println("Setting timer wakeup to "+String(samplingTime.value)+" seconds");
-	esp_sleep_enable_timer_wakeup(samplingTime.value * sToUs);
+	esp_sleep_enable_timer_wakeup((unsigned long) samplingTime.value * sToUs);
 	Serial.println("Going into sleep for "+String(samplingTime.value)+" seconds");
 	esp_deep_sleep_start();
 }
