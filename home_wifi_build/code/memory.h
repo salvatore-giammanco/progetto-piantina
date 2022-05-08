@@ -100,7 +100,6 @@ struct SoilMoisture: MQTTtopics {
 	{
 		key = "SoilMoisture";
 		stateTopic = "abegghome/moisture/state";
-		availabilityTopic = "abegghome/moisture/availability";
 		debugTopic = "abegghome/moisture/debug";
 	}
 
@@ -190,16 +189,26 @@ void updateVar(bool value, String keyname){
 }
 
 void getAllFromMemory(){
+	Serial.println("Getting variables from memory");
 	preferences.begin(variablesNamespace, false);
 	pumpOverride.value = preferences.getBool(pumpOverride.key.c_str());
+	Serial.println("pumpOverride value: "+String(pumpOverride.value));
 	pumpSwitch.value = preferences.getBool(pumpSwitch.key.c_str());
+	Serial.println("pumpSwitch value: "+String(pumpSwitch.value));
 	moistureTresh.value = preferences.getFloat(moistureTresh.key.c_str());
+	Serial.println("moistureTresh value: "+String(moistureTresh.value));
 	soilMoisture.value = preferences.getInt(soilMoisture.key.c_str());
+	Serial.println("soilMoisture value: "+String(soilMoisture.value));
 	airValue.value = preferences.getFloat(airValue.key.c_str());
+	Serial.println("airValue value: "+String(airValue.value));
 	waterValue.value = preferences.getFloat(waterValue.key.c_str());
+	Serial.println("waterValue value: "+String(waterValue.value));
 	samplingTime.value = preferences.getInt(samplingTime.key.c_str());
+	Serial.println("samplingTime value: "+String(samplingTime.value));
 	pumpRuntime.value = preferences.getInt(pumpRuntime.key.c_str());
+	Serial.println("pumpRuntime value: "+String(pumpRuntime.value));
 	wateringTime.value = preferences.getInt(wateringTime.key.c_str());
+	Serial.println("wateringTime value: "+String(wateringTime.value));
 	preferences.end();
 }
 

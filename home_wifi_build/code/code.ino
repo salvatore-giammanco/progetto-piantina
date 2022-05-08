@@ -16,13 +16,14 @@ void setup() {
 	// Start memory
 	preferences.begin(variablesNamespace, false);
 	// Get the last time the pump was run
-	time_t lastTime = preferences.getInt(timeVar);
+	// and compute the seconds since it happenend
+	time_t diffTime = difftime(time(NULL), preferences.getInt(timeVar));
 	preferences.end();
 	// Start code to wet the plant
 	Serial.println("Reading soil moisture");
 	read_soil_moisture_percent_average();
 	createJson<float>(soilMoisture.value);
-	if(pumpOverride.value || (pumpSwitch.value && (difftime(time(NULL), lastTime) >= (wateringTime.value * 3600)) && (soilMoisture.value < moistureTresh.value))){
+	if(pumpOverride.value || (pumpSwitch.value && (diffTime >= (wateringTime.value * 3600)) && (soilMoisture.value < moistureTresh.value))){
 		Serial.println("Running pump for "+String(pumpRuntime.value)+" seconds");
 		digitalWrite(PUMP_PIN, HIGH);
 		if(mqttConnected){
@@ -34,6 +35,10 @@ void setup() {
 			delay(pumpRuntime.value * sToMs);
 			digitalWrite(PUMP_PIN, LOW);
 		}
+		preferences.begin(variablesNamespace, false);
+		// Set the last time the pump was run
+		preferences.putInt(timeVar, time(NULL));
+		preferences.end();
 	}
 	else{
 		Serial.println("Condition to water plant not met, pump is off");

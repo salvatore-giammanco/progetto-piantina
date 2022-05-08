@@ -183,11 +183,11 @@ void wifi_mqtt_connect(){
 		if(!mqttConnected){
 			// Stop the client, otherwise it'll attempt to connect again
 			esp_mqtt_client_stop(client);
-			Serial.println("Couldn't connect to the MQTT broker, fetching vars from memory.");
+			Serial.println("Couldn't connect to the MQTT broker.");
 			getAllFromMemory();
 		}
 	} else {
-		Serial.println("Couldn't connect to the wifi, fetching vars from memory.");
+		Serial.println("Couldn't connect to the wifi.");
 		getAllFromMemory();
 	}
 }
@@ -195,11 +195,12 @@ void wifi_mqtt_connect(){
 void wifi_mqtt_disconnect(){
 	esp_mqtt_client_destroy(client);
 	WiFi.disconnect();
-	Serial.println("Disconnecting");
+	Serial.print("Disconnecting");
 	while(WiFi.isConnected()){
 		Serial.print('.');
 		delay(100);
 	}
+	Serial.println();
 }
 
 #endif
