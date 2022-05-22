@@ -11,14 +11,20 @@ Perchè la scheda ESP32 consente di fare le stesse cose, ma ha in più un modulo
 Di seguito vi proponiamo le componenti minime da acquistare per realizzare il progetto. I link sono solo dei riferimenti su cosa acquistare, qualunque componente equivalente andrà bene:
 
 - ESP 32 Devkit V1 (attenzione a comprare il Devkit V1 e non altre versioni)
-    - [Opzione 1](https://amzn.to/3I1UWo7)
-    - [Opzione 2](https://bit.ly/3rLBN3c) (può impiegare qualche settimana ad arrivare)
+    - [Migliore](https://www.dfrobot.com/product-2231.html) questa scheda ha il minor consumo di corrente mentre è in ibernazione. Unico downside, ha bisogno di 1 relay in più, quindi un tot di 2 relay.
+    - [Opzione 2](https://amzn.to/3I1UWo7)
+    - [Opzione 3](https://bit.ly/3rLBN3c) (può impiegare qualche settimana ad arrivare)
+    - [Opzione con GSM](https://makeradvisor.com/ttgo-t-call-esp32-with-sim800l-gsm-gprs/) utile per connettersi con la rete del cellulare
+    - In generale, ci sono molte schede che usano il processore ESP32, alcune sono più indicate di altre per essere usate con la batteria come in questo progetto, trovate un'opinione più completa in merito [in questo video](https://www.youtube.com/watch?v=-769_YIeGmI)
 - [Cavi, breadboard etc.](https://amzn.to/3I0vpMa)
     - Se oltre agli accessori volete anche un Arduino Uno (usato al posto della ESP 32 nel progetto dell'ufficio, ed è anche molto più user friendly), vi suggeriamo di prendere invece [questo kit](https://amzn.to/3qS6Tag)
 - [Sensore di umidità](https://amzn.to/33fi18c) (attenzione a quale sensore prendete, questo che proponiamo è resistente alla corrosione)
 - [Pompe per l'acqua](https://amzn.to/33sKqHE)
-- Qualunque set di relay va bene, ad esempio [Relay](https://amzn.to/3tpK53x) ma se pensate che ve ne servano di meno si trovano molti prodotto equivalenti
-- Batterie al litio (formato 18650, si trovano in qualunque negozio di elettronica). Le normali batterie alcaline non hanno un output di corrente sufficiente.
+- Qualunque set di relay va bene, ad esempio [Relay](https://amzn.to/3tpK53x) ma se pensate che ve ne servano di meno si trovano molti prodotto equivalenti. Per questo progetto ne serve 1 oppure 2 se scegliete la scheda all'opzione _migliore_
+- Batterie al litio, le normali batterie alcaline non hanno un output di corrente sufficiente
+  - Se scegliate la prima scheda (opzione _migliore_), questa scheda ha già installato un connettore JST per collegare una batteria al litio come ad esempio [questa ai polimeri di litio](https://www.amazon.it/gp/product/B08214DJLJ/ref=ppx_yo_dt_b_asin_title_o04_s00?ie=UTF8&psc=1) (è quella che sto usando al momento)
+  - Altrimenti, potete comprare delle normali batterie agli ioni di litio formato 18650 oppure 21700
+- Nastro isolante nero, lo trovate al supermercato oppure al Brico
 - (Opzionale) Un Raspberry Pi 2 Modello B, o versione successiva.
 
 # Guida

@@ -2,6 +2,7 @@
 #define _READ_MEMORY_H_
 
 #include <Preferences.h>
+#include "mqtt_client.h"
 
 Preferences preferences;
 static const int sToUs = 1000000;
@@ -20,6 +21,7 @@ static const long DefaultMS_minute = 60 * sToMs; //Milliseconds per minute
 static const long DefaultMS_hour = (long)DefaultMS_minute*60; //Milliseconds per hour
 static const int MOISTURE_READING_PIN = 36;
 static const int PUMP_PIN = 26;
+static const gpio_num_t FULL_SWITCH = GPIO_NUM_25;
 static const char variablesNamespace[] = "constants";
 static const char timeVar[] = "time";
 static const unsigned char DSTroot_CA[] PROGMEM = R"EOF(
@@ -27,8 +29,8 @@ COPY HERE THE CONTENT OF CA.CRT
 )EOF";
 
 
-
 struct MQTTtopics {
+
 	MQTTtopics():
 		key("debug"),
 		commandTopic("debug"),
@@ -43,6 +45,34 @@ struct MQTTtopics {
 	String availabilityTopic;
 	String debugTopic;
 };
+
+struct Logger: MQTTtopics {
+	bool serial;
+	bool mqttConnected;
+	esp_mqtt_client_handle_t client;
+	
+	Logger(bool serial):
+		MQTTtopics()
+	{
+		this->serial = serial;
+		this->mqttConnected = false;
+		this->client = nullptr;
+		stateTopic = "abegghome/logger/state";
+	}
+
+	void log(String msg, bool newline = true){
+		if(this->serial){
+			(newline?Serial.println(msg):Serial.print(msg));
+		}
+		else{
+			if(this->mqttConnected){
+				esp_mqtt_client_publish(this->client, this->stateTopic.c_str(), msg.c_str(), 0, 1, 1);
+			} else {
+				(newline?Serial.println(msg):Serial.print(msg));
+			}
+		}
+	}
+} logger(false);
 
 struct PumpOverride: MQTTtopics {
 	PumpOverride():
@@ -168,47 +198,53 @@ struct WateringTime: MQTTtopics {
 } wateringTime;
 
 void updateVar(float value, String keyname){
+	preferences.begin(variablesNamespace, false);
 	if(value != preferences.getFloat(keyname.c_str(), NAN)){
-		Serial.println("updating value "+keyname);
+		logger.log("updating value "+keyname);
 		preferences.putFloat(keyname.c_str(), value);
 	}
+	preferences.end();
 }
 
 void updateVar(int value, String keyname){
+	preferences.begin(variablesNamespace, false);
 	if(value != preferences.getInt(keyname.c_str(), NAN)){
-		Serial.println("updating value "+keyname);
+		logger.log("updating value "+keyname);
 		preferences.putInt(keyname.c_str(), value);
 	}
+	preferences.end();
 }
 
 void updateVar(bool value, String keyname){
+	preferences.begin(variablesNamespace, false);
 	if(value != preferences.getBool(keyname.c_str(), NAN)){
-		Serial.println("updating value "+keyname);
+		logger.log("updating value "+keyname);
 		preferences.putBool(keyname.c_str(), value);
 	}
+	preferences.end();
 }
 
 void getAllFromMemory(){
-	Serial.println("Getting variables from memory");
+	logger.log("Getting variables from memory");
 	preferences.begin(variablesNamespace, false);
 	pumpOverride.value = preferences.getBool(pumpOverride.key.c_str());
-	Serial.println("pumpOverride value: "+String(pumpOverride.value));
+	logger.log("pumpOverride value: "+String(pumpOverride.value));
 	pumpSwitch.value = preferences.getBool(pumpSwitch.key.c_str());
-	Serial.println("pumpSwitch value: "+String(pumpSwitch.value));
+	logger.log("pumpSwitch value: "+String(pumpSwitch.value));
 	moistureTresh.value = preferences.getFloat(moistureTresh.key.c_str());
-	Serial.println("moistureTresh value: "+String(moistureTresh.value));
+	logger.log("moistureTresh value: "+String(moistureTresh.value));
 	soilMoisture.value = preferences.getInt(soilMoisture.key.c_str());
-	Serial.println("soilMoisture value: "+String(soilMoisture.value));
+	logger.log("soilMoisture value: "+String(soilMoisture.value));
 	airValue.value = preferences.getFloat(airValue.key.c_str());
-	Serial.println("airValue value: "+String(airValue.value));
+	logger.log("airValue value: "+String(airValue.value));
 	waterValue.value = preferences.getFloat(waterValue.key.c_str());
-	Serial.println("waterValue value: "+String(waterValue.value));
+	logger.log("waterValue value: "+String(waterValue.value));
 	samplingTime.value = preferences.getInt(samplingTime.key.c_str());
-	Serial.println("samplingTime value: "+String(samplingTime.value));
+	logger.log("samplingTime value: "+String(samplingTime.value));
 	pumpRuntime.value = preferences.getInt(pumpRuntime.key.c_str());
-	Serial.println("pumpRuntime value: "+String(pumpRuntime.value));
+	logger.log("pumpRuntime value: "+String(pumpRuntime.value));
 	wateringTime.value = preferences.getInt(wateringTime.key.c_str());
-	Serial.println("wateringTime value: "+String(wateringTime.value));
+	logger.log("wateringTime value: "+String(wateringTime.value));
 	preferences.end();
 }
 

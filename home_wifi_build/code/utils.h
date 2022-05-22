@@ -10,10 +10,8 @@ float map_range(float x, float in_min, float in_max, float out_min, float out_ma
 
 //Function to print a value p on serial, along with a final value f which also generates a new line
 template<typename T>
-void print_on_serial(T p){
-	Serial.print(millis());
-	Serial.print(": ");
-	Serial.println(p);
+void print_raw_reading(T p){
+	logger.log(String(millis())+": "+String(p));
 }
 
 //Function to sample the soil moisture
@@ -24,7 +22,7 @@ float read_soil_moisture(){
 	// Convert the analog read into voltage
 	// ESP32 returns a value from 0 (0V) to 4095 (3.3V)
 	float reading = ((float) analogRead(MOISTURE_READING_PIN)/4095.0)*3.3;
-	Serial.println("Analog read: "+String(reading));
+	logger.log("Analog read: "+String(reading));
 	return reading;
 }
 
@@ -42,7 +40,7 @@ void read_soil_moisture_percent_average(){
 	}
 	soilMoisture.raw_value = soilMoistureAverage;
 	soilMoisture.value = soil_moisture_percent(soilMoistureAverage);
-	print_on_serial(soilMoisture.value); //Prints the average value
+	print_raw_reading(soilMoisture.value); //Prints the average value
 }
 
 #endif
