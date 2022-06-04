@@ -1,2 +1,10 @@
 .DS_Store
 .vscode
+*.txt
+*test*
+*.log*
+*.db*
+*.passwd
+.cloud
+.storage
+.HA_VERSION
